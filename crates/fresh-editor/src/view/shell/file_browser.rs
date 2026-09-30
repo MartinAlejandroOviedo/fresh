@@ -397,6 +397,9 @@ fn header(b: &Browser) -> Node<UiMsg> {
             BrowserPart::Column(m),
         )
     };
+    // The leading gap that matches the entry rows' icon cell, so the name
+    // header sits over the names rather than over the glyphs.
+    let icon = " ".repeat(ICON_W as usize);
     let name = format!(" {}{}", t!("file_browser.name"), mark(SortMode::Name));
     let size = format!(
         "{:>w$}",
@@ -413,6 +416,7 @@ fn header(b: &Browser) -> Node<UiMsg> {
         w = MODIFIED_W as usize
     );
     row().h(Sizing::Cells(1)).theme(base.clone()).children([
+        text(icon).w(Sizing::Cells(ICON_W)),
         column(SortMode::Name, name).flex(1),
         column(SortMode::Size, size).w(Sizing::Cells(SIZE_W)),
         // Absorbs the rest of the row, as the painter's span did, so every
@@ -476,6 +480,31 @@ fn dir_theme(matches: bool, st: RowState) -> String {
     }
 }
 
+/// Columns the leading icon takes: the glyph plus the gap after it.
+///
+/// Fixed rather than measured because the names beside it have to line up. Two
+/// of the glyphs in `file_icons` are single-width by Unicode's definition
+/// (`⚙`, `⬛`), so a natural width would leave those rows' names one column
+/// left of the rest — and the padding is applied from the same `str_width` the
+/// tree lays out with, so it counts the glyph the same way.
+const ICON_W: u16 = 3;
+
+/// The padded glyph cell for a row, and the ink to paint it in.
+fn icon_cell(name: &str, is_dir: bool, ink_bg: &str) -> (String, String) {
+    use crate::primitives::display_width::str_width;
+
+    let mark = crate::file_icons::mark_for(name, is_dir);
+    let (r, g, b) = mark.rgb;
+    let pad = (ICON_W as usize).saturating_sub(str_width(mark.icon));
+    (
+        format!("{}{}", mark.icon, " ".repeat(pad)),
+        // A literal colour, not a theme key: `resolve` asserts that every key
+        // it is handed exists, and an unresolved key would fall back to the
+        // row's ordinary ink instead of failing.
+        format!("#{r:02x}{g:02x}{b:02x}/{ink_bg}"),
+    )
+}
+
 fn entry_row(e: &Entry, st: RowState) -> Node<UiMsg> {
     let t = row_theme(e.matches, st);
     let selected = matches!(st, RowState::Selected | RowState::SelectedBlur);
@@ -491,7 +520,9 @@ fn entry_row(e: &Entry, st: RowState) -> Node<UiMsg> {
     } else {
         t.clone()
     };
+    let (icon, icon_ink) = icon_cell(&e.name, e.is_dir, row_bg(e.matches, st));
     row().h(Sizing::Cells(1)).children([
+        text(icon).theme(icon_ink).w(Sizing::Cells(ICON_W)),
         text(name).theme(name_ink).elide(Elide::Tail).flex(1),
         text(format!(
             "{:>w$}",

@@ -496,7 +496,7 @@ impl MenuState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::MenuConfig;
+    use crate::config::{MenuConfig, MenuExt};
     use std::collections::HashMap;
 
     fn create_test_menus() -> Vec<Menu> {
@@ -719,6 +719,155 @@ mod tests {
         state.highlighted_item = Some(1); // Separator
 
         assert!(state.get_highlighted_action(&menus).is_none());
+    }
+
+    /// The `hidden_actions` filter, on the shape it actually sees: a built-in
+    /// File menu where `switch_project` sits between two separators, plus a
+    /// submenu with a row of its own.
+    fn menu_with_a_hidden_row() -> Menu {
+        Menu {
+            id: Some("File".to_string()),
+            label: "File".to_string(),
+            when: None,
+            items: vec![
+                MenuItem::Action {
+                    label: "New".to_string(),
+                    action: "new_file".to_string(),
+                    args: HashMap::new(),
+                    when: None,
+                    checkbox: None,
+                },
+                MenuItem::Separator { separator: true },
+                MenuItem::Action {
+                    label: "Change project...".to_string(),
+                    action: "switch_project".to_string(),
+                    args: HashMap::new(),
+                    when: None,
+                    checkbox: None,
+                },
+                MenuItem::Separator { separator: true },
+                MenuItem::Submenu {
+                    label: "Open with".to_string(),
+                    items: vec![
+                        MenuItem::Action {
+                            label: "Editor".to_string(),
+                            action: "open_in_editor".to_string(),
+                            args: HashMap::new(),
+                            when: None,
+                            checkbox: None,
+                        },
+                        MenuItem::Action {
+                            label: "Switch project".to_string(),
+                            action: "switch_project".to_string(),
+                            args: HashMap::new(),
+                            when: None,
+                            checkbox: None,
+                        },
+                    ],
+                },
+            ],
+        }
+    }
+
+    fn action_ids(menu: &Menu) -> Vec<&str> {
+        menu.items
+            .iter()
+            .filter_map(|i| match i {
+                MenuItem::Action { action, .. } => Some(action.as_str()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn hidden_actions_drops_the_row_by_action_not_by_label() {
+        let mut menu = menu_with_a_hidden_row();
+        menu.remove_actions(&["switch_project".to_string()]);
+
+        assert_eq!(action_ids(&menu), vec!["new_file"]);
+        // The submenu's copy of the same action went too — one name, every row.
+        // It is the last item, since the hidden row was removed from the front.
+        let Some(MenuItem::Submenu { items, .. }) = menu.items.last() else {
+            panic!("expected the submenu to survive");
+        };
+        assert_eq!(items.len(), 1);
+        assert!(matches!(
+            &items[0],
+            MenuItem::Action { action, .. } if action == "open_in_editor"
+        ));
+    }
+
+    #[test]
+    fn only_an_exact_action_name_matches() {
+        // Prefix matching would hide anything that merely starts with the same
+        // word, which is how a filter like this quietly eats unrelated rows.
+        let mut menu = Menu {
+            id: None,
+            label: "File".to_string(),
+            when: None,
+            items: vec![
+                MenuItem::Action {
+                    label: "A".to_string(),
+                    action: "switch_project".to_string(),
+                    args: HashMap::new(),
+                    when: None,
+                    checkbox: None,
+                },
+                MenuItem::Action {
+                    label: "B".to_string(),
+                    action: "switch_project_recent".to_string(),
+                    args: HashMap::new(),
+                    when: None,
+                    checkbox: None,
+                },
+                MenuItem::Action {
+                    label: "C".to_string(),
+                    action: "my_switch_project".to_string(),
+                    args: HashMap::new(),
+                    when: None,
+                    checkbox: None,
+                },
+            ],
+        };
+        menu.remove_actions(&["switch_project".to_string()]);
+        assert_eq!(action_ids(&menu), vec!["switch_project_recent", "my_switch_project"]);
+    }
+
+    #[test]
+    fn an_empty_hidden_list_changes_nothing() {
+        let before = menu_with_a_hidden_row();
+        let mut after = before.clone();
+        after.remove_actions(&[]);
+        assert_eq!(before, after);
+    }
+
+    #[test]
+    fn a_submenu_left_with_nothing_visible_is_dropped() {
+        let mut menu = Menu {
+            id: None,
+            label: "File".to_string(),
+            when: None,
+            items: vec![MenuItem::Submenu {
+                label: "Only".to_string(),
+                items: vec![MenuItem::Action {
+                    label: "Change project...".to_string(),
+                    action: "switch_project".to_string(),
+                    args: HashMap::new(),
+                    when: None,
+                    checkbox: None,
+                }],
+            }],
+        };
+        menu.remove_actions(&["switch_project".to_string()]);
+        // An empty "Open with ▸" flyout is worse than none at all.
+        assert!(menu.items.is_empty());
+    }
+
+    #[test]
+    fn hidden_actions_defaults_to_empty_in_a_fresh_config() {
+        let config: crate::config::EditorConfig =
+            serde_json::from_str("{}").expect("an empty object is a valid editor config");
+        assert!(config.hidden_actions.is_empty());
     }
 
     #[test]

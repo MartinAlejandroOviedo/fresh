@@ -2682,6 +2682,21 @@ impl Editor {
         )
     }
 
+    /// True when `widget_key` is the currently-focused editable Text field in
+    /// `panel_key`. Context menus retain both keys and validate them again on
+    /// activation so an async panel update cannot redirect a clipboard action
+    /// to another field.
+    pub(super) fn panel_focused_text_is(
+        &self,
+        panel_key: &crate::widgets::PanelKey,
+        widget_key: &str,
+    ) -> bool {
+        self.widget_registry
+            .get(panel_key)
+            .is_some_and(|panel| panel.focus_key == widget_key)
+            && self.panel_focused_widget_is_text(panel_key)
+    }
+
     /// Read the currently-selected text from the focused `Text`
     /// widget on the given panel, or `None` when nothing is
     /// selected (no anchor, or anchor == cursor). Used by the

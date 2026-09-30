@@ -45,7 +45,14 @@ impl Editor {
     }
 
     /// Get all menus (built-in menus + plugin menus) with DynamicSubmenus expanded.
+    ///
+    /// Mirrors `all_menus_expanded`, which is the path the renderers use; the
+    /// `hidden_actions` filter is repeated here because this one feeds keyboard
+    /// navigation, where a row that was drawn as absent must also not be
+    /// reachable by arrow keys — otherwise the cursor lands on a row the user
+    /// cannot see.
     fn all_menus(&self) -> Vec<Menu> {
+        let hidden = self.config().editor.hidden_actions.clone();
         self.menus
             .menus
             .iter()
@@ -53,6 +60,7 @@ impl Editor {
             .cloned()
             .map(|mut menu| {
                 menu.expand_dynamic_items(&self.menu_state.themes_dir);
+                menu.remove_actions(&hidden);
                 menu
             })
             .collect()

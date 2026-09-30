@@ -37,10 +37,17 @@ impl Editor {
     /// menus (also expanded). This is the single expansion path shared by the
     /// TUI renderer and the web `menu_view()` projection, so the two frontends
     /// never diverge on which menus/items exist.
+    ///
+    /// Rows dispatching an action listed in `editor.hidden_actions` are dropped
+    /// here, after expansion, for both the built-in and the plugin menus — which
+    /// is the one place a hidden row has to be filtered for every frontend to
+    /// agree. Filtering before expansion instead would miss plugin rows, and
+    /// filtering in each renderer would let them drift apart.
     pub fn all_menus_expanded(&self) -> Vec<fresh_core::menu::Menu> {
         use crate::config::MenuExt;
 
         let themes_dir = self.menu_state.themes_dir.clone();
+        let hidden = self.config().editor.hidden_actions.clone();
         // Config menus: reuse the renderer's cached expansion (avoids rescanning
         // theme JSON every frame); fall back to expanding `self.menus` directly.
         let mut all: Vec<fresh_core::menu::Menu> = match self.expanded_menus_cache.get() {
@@ -58,6 +65,11 @@ impl Editor {
             menu.expand_dynamic_items(&themes_dir);
             all.push(menu);
         }
+        if !hidden.is_empty() {
+            for menu in &mut all {
+                menu.remove_actions(&hidden);
+            }
+        }
         all
     }
 
@@ -73,6 +85,11 @@ impl Editor {
         // `Some` for a mounted dock whether it's focused or blurred — the
         // menu checkbox tracks visibility, not who owns the keyboard.
         let dock_visible = self.dock.is_some();
+        // The AI chat panel: a virtual "AI Chat" buffer open in a visible
+        // split. Host-computed (like `dock_visible`) so the checkmark stays
+        // honest when the panel is closed by routes the plugin didn't
+        // initiate (split close, undo split, …).
+        let chat_panel = self.is_chat_panel_visible();
         let mouse_capture = self
             .mouse_capture
             .load(std::sync::atomic::Ordering::Relaxed);
@@ -149,6 +166,7 @@ impl Editor {
             .set(context_keys::COMPOSE_MODE, page_view)
             .set(context_keys::FILE_EXPLORER, file_explorer_visible)
             .set(context_keys::DOCK, dock_visible)
+            .set(context_keys::CHAT_PANEL, chat_panel)
             .set(context_keys::FILE_EXPLORER_FOCUSED, file_explorer_focused)
             .set(context_keys::MOUSE_CAPTURE, mouse_capture)
             .set(context_keys::MOUSE_HOVER, mouse_hover)
@@ -167,6 +185,27 @@ impl Editor {
             .set(context_keys::HORIZONTAL_SCROLLBAR, horizontal_scrollbar)
             .set(context_keys::SCROLL_SYNC, scroll_sync)
             .set(context_keys::HAS_SAME_BUFFER_SPLITS, has_same_buffer_splits);
+    }
+
+    /// True when the AI chat panel is open in a visible split of the
+    /// active window.
+    ///
+    /// The panel is the `ai_completion` plugin's virtual "AI Chat" buffer.
+    /// The core owns no field for it, so it is detected by walking the
+    /// active window's visible panes for a virtual buffer with that display
+    /// name — the same contract the plugin's own `findChatBuffer()` uses.
+    /// Computing it here (rather than letting the plugin report it) keeps
+    /// the View ▸ Chat AI checkmark honest across every open/close route:
+    /// the menu toggle, the command palette, and plain split/buffer closes.
+    pub fn is_chat_panel_visible(&self) -> bool {
+        let Some(w) = self.windows.get(&self.active_window) else {
+            return false;
+        };
+        w.panes_with_buffers().into_iter().any(|(_, buffer_id)| {
+            w.buffer_metadata
+                .get(&buffer_id)
+                .is_some_and(|m| m.is_virtual() && m.display_name == "AI Chat")
+        })
     }
 }
 

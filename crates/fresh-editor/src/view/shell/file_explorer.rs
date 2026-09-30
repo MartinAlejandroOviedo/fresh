@@ -144,7 +144,7 @@ pub struct Explorer {
 impl Explorer {
     /// The panel's ground — the background every row and the border sit on.
     pub fn panel() -> String {
-        pair("editor.fg", "editor.bg")
+        pair("editor.fg", "ui.sidebar_bg")
     }
 }
 
@@ -419,17 +419,17 @@ pub fn chrome_themes(remote_disconnected: bool, focused: bool) -> (String, Strin
                 "ui.status_error_indicator_bg",
                 &["bold"],
             ),
-            pair("ui.status_error_indicator_bg", "editor.bg"),
+            pair("ui.status_error_indicator_bg", "ui.sidebar_bg"),
         )
     } else if focused {
         (
             attrs("editor.bg", "editor.fg", &["bold"]),
-            pair("editor.cursor", "editor.bg"),
+            pair("editor.cursor", "ui.sidebar_bg"),
         )
     } else {
         (
-            pair("editor.line_number_fg", "editor.bg"),
-            pair("ui.split_separator_fg", "editor.bg"),
+            pair("editor.line_number_fg", "ui.sidebar_bg"),
+            pair("ui.sidebar_border_fg", "ui.sidebar_bg"),
         )
     }
 }
@@ -437,9 +437,9 @@ pub fn chrome_themes(remote_disconnected: bool, focused: bool) -> (String, Strin
 /// The close button's own colour.
 pub fn close_theme(hovered: bool) -> String {
     if hovered {
-        pair("ui.tab_close_hover_fg", "editor.bg")
+        pair("ui.tab_close_hover_fg", "ui.sidebar_bg")
     } else {
-        pair("editor.line_number_fg", "editor.bg")
+        pair("editor.line_number_fg", "ui.sidebar_bg")
     }
 }
 

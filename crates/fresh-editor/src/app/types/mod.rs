@@ -22,9 +22,11 @@ pub use buffer_meta::{BufferKind, BufferMetadata};
 pub use context_menu::FILE_EXPLORER_CONTEXT_MENU_WIDTH;
 pub use context_menu::NEW_TAB_MENU_WIDTH;
 pub use context_menu::TAB_CONTEXT_MENU_WIDTH;
+pub use context_menu::TEXT_CONTEXT_MENU_WIDTH;
 pub use context_menu::{
     CloseSplitMenu, CloseSplitMenuItem, ContextMenu, ContextMenuKind, FileExplorerContextMenu,
     FileExplorerContextMenuItem, NewTabMenu, NewTabMenuItem, TabContextMenu, TabContextMenuItem,
+    TextContextMenu, TextContextMenuItem,
 };
 
 // drag re-exports

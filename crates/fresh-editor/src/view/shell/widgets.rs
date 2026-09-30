@@ -2417,7 +2417,7 @@ fn node_body(spec: &WidgetSpec, width: u16, cx: &Ctx<'_>, site: Site) -> Node<Ui
             sel_start,
             sel_end,
             label_width,
-            read_only: _,
+            read_only,
             // `markdown` only means anything to a multi-line field — the arm
             // above owns that — so a one-row field renders as input chrome
             // whatever it says.
@@ -2452,13 +2452,14 @@ fn node_body(spec: &WidgetSpec, width: u16, cx: &Ctx<'_>, site: Site) -> Node<Ui
             let label_s = label.clone();
             let placeholder_s = placeholder.clone();
             let key_s = key.map(|k| k.to_string());
-            let (fw, mvc, fullw, bc, sel, lw, gutter, w32) = (
+            let (fw, mvc, fullw, bc, sel, lw, ro, gutter, w32) = (
                 *field_width,
                 *max_visible_chars,
                 *full_width,
                 *block_caret,
                 (*sel_start, *sel_end),
                 *label_width,
+                *read_only,
                 cx.marker_gutter,
                 width as u32,
             );
@@ -2475,6 +2476,7 @@ fn node_body(spec: &WidgetSpec, width: u16, cx: &Ctx<'_>, site: Site) -> Node<Ui
                     sel,
                     lw,
                     is_focused,
+                    ro,
                     key_s.as_deref(),
                     gutter,
                     w32,

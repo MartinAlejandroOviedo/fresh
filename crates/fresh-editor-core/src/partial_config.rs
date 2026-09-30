@@ -215,6 +215,7 @@ pub struct PartialEditorConfig {
     pub screensaver_enabled: Option<bool>,
     pub screensaver_idle_minutes: Option<u32>,
     pub menu_bar_mnemonics: Option<bool>,
+    pub hidden_actions: Option<Vec<String>>,
     pub show_tab_bar: Option<bool>,
     pub show_status_bar: Option<bool>,
     pub status_bar: Option<crate::config::StatusBarConfig>,
@@ -341,6 +342,12 @@ impl Merge for PartialEditorConfig {
             .merge_from(&other.screensaver_idle_minutes);
         self.menu_bar_mnemonics
             .merge_from(&other.menu_bar_mnemonics);
+        // Replace, not extend: a later layer that names the rows to hide is
+        // describing the whole list, and appending to an inherited one would
+        // make it impossible to unhide anything.
+        if other.hidden_actions.is_some() {
+            self.hidden_actions = other.hidden_actions.clone();
+        }
         self.show_tab_bar.merge_from(&other.show_tab_bar);
         self.show_status_bar.merge_from(&other.show_status_bar);
         if other.status_bar.is_some() {
@@ -711,6 +718,7 @@ impl From<&crate::config::EditorConfig> for PartialEditorConfig {
             screensaver_enabled: Some(cfg.screensaver_enabled),
             screensaver_idle_minutes: Some(cfg.screensaver_idle_minutes),
             menu_bar_mnemonics: Some(cfg.menu_bar_mnemonics),
+            hidden_actions: Some(cfg.hidden_actions.clone()),
             show_tab_bar: Some(cfg.show_tab_bar),
             show_status_bar: Some(cfg.show_status_bar),
             status_bar: Some(cfg.status_bar.clone()),
@@ -889,6 +897,10 @@ impl PartialEditorConfig {
             menu_bar_mnemonics: self
                 .menu_bar_mnemonics
                 .unwrap_or(defaults.menu_bar_mnemonics),
+            hidden_actions: self
+                .hidden_actions
+                .clone()
+                .unwrap_or_else(|| defaults.hidden_actions.clone()),
             show_tab_bar: self.show_tab_bar.unwrap_or(defaults.show_tab_bar),
             show_status_bar: self.show_status_bar.unwrap_or(defaults.show_status_bar),
             status_bar: self

@@ -1097,6 +1097,9 @@ pub struct Window {
     /// File-explorer context menu state (right-click in the explorer).
     pub file_explorer_context_menu: Option<crate::app::types::FileExplorerContextMenu>,
 
+    /// Editable plugin Text widget context menu state.
+    pub text_context_menu: Option<crate::app::types::TextContextMenu>,
+
     /// Close-split confirmation popup state (left-click on a split tab bar's
     /// `×` button). Offers "Close split" / "Cancel".
     pub close_split_menu: Option<crate::app::types::CloseSplitMenu>,
@@ -1347,6 +1350,9 @@ impl Window {
         if let Some(m) = &self.close_split_menu {
             return Some((ContextMenuKind::CloseSplit, &m.menu));
         }
+        if let Some(m) = &self.text_context_menu {
+            return Some((ContextMenuKind::Text, &m.menu));
+        }
         None
     }
 
@@ -1374,6 +1380,7 @@ impl Window {
             ContextMenuKind::NewTab => self.new_tab_menu.as_mut().map(|m| &mut m.menu),
             ContextMenuKind::Tab => self.tab_context_menu.as_mut().map(|m| &mut m.menu),
             ContextMenuKind::CloseSplit => self.close_split_menu.as_mut().map(|m| &mut m.menu),
+            ContextMenuKind::Text => self.text_context_menu.as_mut().map(|m| &mut m.menu),
         }
     }
 
@@ -1412,6 +1419,13 @@ impl Window {
                 .iter()
                 .map(|i| i.label())
                 .collect(),
+            ContextMenuKind::Text => self
+                .text_context_menu
+                .as_ref()?
+                .items()
+                .iter()
+                .map(|i| i.label())
+                .collect(),
         })
     }
 
@@ -1422,6 +1436,7 @@ impl Window {
         self.new_tab_menu = None;
         self.file_explorer_context_menu = None;
         self.close_split_menu = None;
+        self.text_context_menu = None;
     }
 
     /// Apply LSP folding ranges to the named buffer's `folding_ranges`
@@ -2502,6 +2517,7 @@ impl Window {
             new_tab_menu: None,
             file_explorer_context_menu: None,
             close_split_menu: None,
+            text_context_menu: None,
             theme_info_popup: None,
             event_debug: None,
             file_open_state: None,

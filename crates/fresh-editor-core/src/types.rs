@@ -55,6 +55,12 @@ pub mod context_keys {
     /// carry a checkmark that tracks its own panel without the core
     /// knowing which plugin owns the dock.
     pub const DOCK: &str = "dock";
+    /// True while the AI chat panel is open in a visible split of the
+    /// active window. The panel is the `ai_completion` plugin's virtual
+    /// "AI Chat" buffer; the core detects it by name so the View ▸ Chat AI
+    /// menu row's checkmark tracks the panel however it was opened or
+    /// closed (menu toggle, command palette, split close, …).
+    pub const CHAT_PANEL: &str = "chat_panel";
     pub const MENU_BAR: &str = "menu_bar";
     pub const FILE_EXPLORER_FOCUSED: &str = "file_explorer_focused";
     pub const MOUSE_CAPTURE: &str = "mouse_capture";

@@ -1272,6 +1272,26 @@ pub struct EditorConfig {
     #[schemars(extend("x-section" = "Display"))]
     pub menu_bar_mnemonics: bool,
 
+    /// Action ids whose menu rows are removed from the menu bar entirely.
+    ///
+    /// A row is matched on the action it dispatches, not on its label, so the
+    /// entry stays hidden in every locale and no matter how the label is later
+    /// reworded. Plugin rows are matched the same way, which is the point: a
+    /// plugin can contribute its own "open folder" and the built-in one can be
+    /// switched off by name (`"switch_project"`) without deleting either.
+    ///
+    /// Hiding a row does not disable the action — the keybinding and the
+    /// command palette entry stay. Only the menu row disappears.
+    ///
+    /// Applied once, at the single expansion path every frontend shares
+    /// (`Editor::all_menus_expanded`), so the TUI menu bar, the web
+    /// projection and the platform-native menus can never disagree about it.
+    ///
+    /// Default: empty
+    #[serde(default)]
+    #[schemars(extend("x-section" = "Display"))]
+    pub hidden_actions: Vec<String>,
+
     /// Whether the tab bar is visible by default.
     /// The tab bar shows open files in each split pane.
     /// Can be toggled at runtime via command palette or keybinding.
@@ -2076,6 +2096,7 @@ impl Default for EditorConfig {
             screensaver_enabled: false,
             screensaver_idle_minutes: default_screensaver_idle_minutes(),
             menu_bar_mnemonics: true,
+            hidden_actions: Vec::new(),
             show_tab_bar: true,
             show_status_bar: true,
             status_bar: StatusBarConfig::default(),
@@ -3226,6 +3247,18 @@ pub trait MenuExt {
     /// Expand all DynamicSubmenu items in this menu to regular Submenu items
     /// This should be called before the menu is used for rendering/navigation
     fn expand_dynamic_items(&mut self, themes_dir: &std::path::Path);
+
+    /// Drop every row that dispatches one of `hidden`'s actions, recursing
+    /// into submenus.
+    ///
+    /// Separators are left alone: a hidden row between two separators leaves
+    /// the menu with a double rule, which reads as a mistake. Removing them
+    /// would need to know the neighbours, and this is a filter over a list
+    /// that callers apply right after expansion — not a layout pass.
+    ///
+    /// A no-op when `hidden` is empty, which is the common case, so the
+    /// recursion never runs for a user who asked for nothing.
+    fn remove_actions(&mut self, hidden: &[String]);
 }
 
 impl MenuExt for Menu {
@@ -3240,6 +3273,34 @@ impl MenuExt for Menu {
             .map(|item| item.expand_dynamic(themes_dir))
             .collect();
     }
+
+    fn remove_actions(&mut self, hidden: &[String]) {
+        if hidden.is_empty() {
+            return;
+        }
+        retain_visible_items(&mut self.items, hidden);
+    }
+}
+
+/// True when `item` is a row dispatching an action the config hides.
+fn item_is_hidden(item: &MenuItem, hidden: &[String]) -> bool {
+    matches!(item, MenuItem::Action { action, .. } if hidden.iter().any(|h| h == action))
+}
+
+/// Drop hidden rows from `items`, recursing into submenus, and prune any
+/// submenu left with nothing but separators in it — an empty `File ▸ …` flyout
+/// is worse than no flyout at all.
+fn retain_visible_items(items: &mut Vec<MenuItem>, hidden: &[String]) {
+    items.retain_mut(|item| {
+        if item_is_hidden(item, hidden) {
+            return false;
+        }
+        if let MenuItem::Submenu { items: inner, .. } = item {
+            retain_visible_items(inner, hidden);
+            return inner.iter().any(|i| !matches!(i, MenuItem::Separator { .. }));
+        }
+        true
+    });
 }
 
 /// Extension trait for MenuItem with editor-specific functionality

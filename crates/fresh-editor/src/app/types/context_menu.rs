@@ -1,4 +1,5 @@
 use crate::model::event::{BufferId, LeafId};
+use crate::widgets::PanelKey;
 use fresh_i18n::t;
 
 pub const FILE_EXPLORER_CONTEXT_MENU_WIDTH: u16 = 24;
@@ -12,6 +13,9 @@ pub const TAB_CONTEXT_MENU_WIDTH: u16 = 28;
 
 /// Width of the close-split confirmation popup (fits "Close split" + padding).
 pub const CLOSE_SPLIT_MENU_WIDTH: u16 = 16;
+
+/// Width of the editable Text widget context menu.
+pub const TEXT_CONTEXT_MENU_WIDTH: u16 = 22;
 
 /// Shared geometry + navigation + hit-testing core for the native context
 /// menus.
@@ -92,6 +96,66 @@ pub enum ContextMenuKind {
     FileExplorer,
     /// The close-split confirmation popup (clicking the split's `×` button).
     CloseSplit,
+    /// Right-click menu for an editable plugin Text widget.
+    Text,
+}
+
+/// Clipboard actions offered by an editable Text widget's native context
+/// menu. They map directly to the widget-aware editor clipboard helpers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TextContextMenuItem {
+    Cut,
+    Copy,
+    Paste,
+    SelectAll,
+}
+
+impl TextContextMenuItem {
+    pub fn all() -> &'static [Self] {
+        &[Self::Cut, Self::Copy, Self::Paste, Self::SelectAll]
+    }
+
+    pub fn label(&self) -> String {
+        match self {
+            Self::Cut => t!("menu.edit.cut").to_string(),
+            Self::Copy => t!("menu.edit.copy").to_string(),
+            Self::Paste => t!("menu.edit.paste").to_string(),
+            Self::SelectAll => t!("menu.edit.select_all").to_string(),
+        }
+    }
+}
+
+/// Native context menu targeting one plugin-owned Text widget. Retaining the
+/// composite panel key and widget key prevents a later activation from
+/// accidentally operating on another field after an asynchronous re-render.
+#[derive(Debug, Clone)]
+pub struct TextContextMenu {
+    pub panel_key: PanelKey,
+    pub widget_key: String,
+    pub menu: ContextMenu,
+}
+
+impl TextContextMenu {
+    pub fn new(panel_key: PanelKey, widget_key: String, x: u16, y: u16) -> Self {
+        Self {
+            panel_key,
+            widget_key,
+            menu: ContextMenu::new(
+                x,
+                y,
+                TEXT_CONTEXT_MENU_WIDTH,
+                TextContextMenuItem::all().len(),
+            ),
+        }
+    }
+
+    pub fn items(&self) -> &'static [TextContextMenuItem] {
+        TextContextMenuItem::all()
+    }
+
+    pub fn highlighted_item(&self) -> TextContextMenuItem {
+        TextContextMenuItem::all()[self.menu.highlighted]
+    }
 }
 
 /// Tab context menu items

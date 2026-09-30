@@ -31,6 +31,7 @@ pub mod color_support;
 #[cfg(feature = "runtime")]
 pub mod counters;
 pub mod data_dir;
+pub mod file_icons;
 #[cfg(feature = "runtime")]
 pub mod i18n_embedded;
 #[cfg(feature = "runtime")]

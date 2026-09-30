@@ -962,6 +962,12 @@ pub struct UiColors {
     /// Scrollbar thumb hover color
     #[serde(default = "default_scrollbar_thumb_hover_fg")]
     pub scrollbar_thumb_hover_fg: ColorDef,
+    /// Sidebar background color (file explorer and sidebar panels)
+    #[serde(default)]
+    pub sidebar_bg: Option<ColorDef>,
+    /// Sidebar border color
+    #[serde(default)]
+    pub sidebar_border_fg: Option<ColorDef>,
     /// Compose mode margin background
     #[serde(default = "default_compose_margin_bg")]
     pub compose_margin_bg: ColorDef,
@@ -1600,6 +1606,10 @@ pub struct Theme {
     pub scrollbar_track_hover_fg: Color,
     pub scrollbar_thumb_hover_fg: Color,
 
+    // Sidebar colors
+    pub sidebar_bg: Color,
+    pub sidebar_border_fg: Color,
+
     // Compose mode colors
     pub compose_margin_bg: Color,
 
@@ -1872,12 +1882,24 @@ impl From<ThemeFile> for Theme {
             help_indicator_fg: file.ui.help_indicator_fg.into(),
             help_indicator_bg: file.ui.help_indicator_bg.into(),
             inline_code_bg: file.ui.inline_code_bg.into(),
-            split_separator_fg: file.ui.split_separator_fg.into(),
+            split_separator_fg: file.ui.split_separator_fg.clone().into(),
             split_separator_hover_fg: file.ui.split_separator_hover_fg.into(),
             scrollbar_track_fg: file.ui.scrollbar_track_fg.into(),
             scrollbar_thumb_fg: file.ui.scrollbar_thumb_fg.into(),
             scrollbar_track_hover_fg: file.ui.scrollbar_track_hover_fg.into(),
             scrollbar_thumb_hover_fg: file.ui.scrollbar_thumb_hover_fg.into(),
+            sidebar_bg: file
+                .ui
+                .sidebar_bg
+                .clone()
+                .unwrap_or_else(|| file.editor.bg.clone())
+                .into(),
+            sidebar_border_fg: file
+                .ui
+                .sidebar_border_fg
+                .clone()
+                .unwrap_or_else(|| file.ui.split_separator_fg.clone())
+                .into(),
             compose_margin_bg: file.ui.compose_margin_bg.into(),
             blame_header_fg: file
                 .ui
@@ -2089,6 +2111,8 @@ impl From<Theme> for ThemeFile {
                 scrollbar_thumb_fg: theme.scrollbar_thumb_fg.into(),
                 scrollbar_track_hover_fg: theme.scrollbar_track_hover_fg.into(),
                 scrollbar_thumb_hover_fg: theme.scrollbar_thumb_hover_fg.into(),
+                sidebar_bg: Some(theme.sidebar_bg.into()),
+                sidebar_border_fg: Some(theme.sidebar_border_fg.into()),
                 compose_margin_bg: theme.compose_margin_bg.into(),
                 blame_header_fg: Some(theme.blame_header_fg.into()),
                 blame_header_bg: Some(theme.blame_header_bg.into()),
@@ -2297,6 +2321,24 @@ fn apply_theme_overrides(theme: &mut Theme, theme_file: &ThemeFile, raw: &serde_
     {
         theme.whitespace_indicator_selected_fg =
             selected_indicator_fg(theme.selection_bg, theme.whitespace_indicator_fg);
+    }
+
+    // Same inheritance for the two sidebar keys: both are *derived* — the
+    // panel's ground from `editor.bg`, its border from `ui.split_separator_fg`
+    // (see their `Theme` docs). Resolving them in `From<ThemeFile>` is not
+    // enough on its own: that conversion runs on the *base* theme, before this
+    // function has overlaid the user's leaves, so a theme that overrides
+    // `editor.bg` or `split_separator_fg` and names neither sidebar key would
+    // keep the base's sidebar colors and end up with a panel that no longer
+    // matches its own editor. Re-derive both here, now that every leaf is final.
+    let ui = raw.get("ui").and_then(|v| v.as_object());
+    let ui_names = |key: &str| ui.is_some_and(|ui| ui.contains_key(key));
+    let editor = raw.get("editor").and_then(|v| v.as_object());
+    if editor.is_some_and(|e| e.contains_key("bg")) && !ui_names("sidebar_bg") {
+        theme.sidebar_bg = theme.editor_bg;
+    }
+    if ui_names("split_separator_fg") && !ui_names("sidebar_border_fg") {
+        theme.sidebar_border_fg = theme.split_separator_fg;
     }
 }
 
@@ -2599,6 +2641,8 @@ theme_color_keys! {
         "scrollbar_track_fg" => color scrollbar_track_fg,
         "scrollbar_track_hover_fg" => color scrollbar_track_hover_fg,
         "semantic_highlight_bg" => color semantic_highlight_bg,
+        "sidebar_bg" => color sidebar_bg,
+        "sidebar_border_fg" => color sidebar_border_fg,
         "settings_selected_bg" => color settings_selected_bg,
         "settings_selected_fg" => color settings_selected_fg,
         "split_separator_fg" => color split_separator_fg,
@@ -3656,6 +3700,64 @@ mod tests {
         assert_eq!(theme.blame_header_fg, theme.menu_fg);
         assert_eq!(theme.blame_header_bg, Color::Rgb(11, 22, 33));
         assert_eq!(theme.blame_header_fg, Color::Rgb(44, 55, 66));
+    }
+
+    #[test]
+    /// The file-explorer sidebar's own surface. A theme that names neither key
+    /// must look exactly as it did before they existed: the panel borrows
+    /// `editor.bg` for its ground and `ui.split_separator_fg` for its border.
+    #[test]
+    fn sidebar_colors_fall_back_to_editor_bg_and_split_separator() {
+        let json = r#"{
+            "name": "x",
+            "extends": "builtin://dracula",
+            "ui": { "split_separator_fg": [1, 2, 3] }
+        }"#;
+        let theme = Theme::from_json(json).expect("should parse");
+        assert_eq!(theme.sidebar_bg, theme.editor_bg);
+        assert_eq!(
+            theme.sidebar_border_fg,
+            Color::Rgb(1, 2, 3),
+            "an unset sidebar_border_fg borrows split_separator_fg, not a hardcoded grey"
+        );
+    }
+
+    /// The fallback must read the *inherited* `editor.bg`, not the per-field
+    /// hardcoded default — otherwise a light theme would get a dark sidebar.
+    #[test]
+    fn sidebar_bg_follows_editor_bg_when_only_the_editor_moves() {
+        let json = r#"{
+            "name": "x",
+            "editor": { "bg": [251, 241, 199] }
+        }"#;
+        let theme = Theme::from_json(json).expect("should parse");
+        assert_eq!(theme.sidebar_bg, Color::Rgb(251, 241, 199));
+    }
+
+    #[test]
+    fn sidebar_colors_honour_explicit_theme_values() {
+        let json = r#"{
+            "name": "x",
+            "extends": "builtin://dracula",
+            "ui": {
+                "sidebar_bg": [46, 48, 62],
+                "sidebar_border_fg": [189, 147, 249]
+            }
+        }"#;
+        let theme = Theme::from_json(json).expect("should parse");
+        assert_eq!(theme.sidebar_bg, Color::Rgb(46, 48, 62));
+        assert_eq!(theme.sidebar_border_fg, Color::Rgb(189, 147, 249));
+    }
+
+    /// Both keys must be addressable through the string-key resolvers, which
+    /// is the path plugin overrides and theme-JSON loads take.
+    #[test]
+    fn sidebar_colors_resolve_through_the_theme_key_resolvers() {
+        let mut theme = Theme::load_builtin(THEME_DARK).expect("dark builtin");
+        assert!(theme.resolve_theme_key("ui.sidebar_bg").is_some());
+        assert!(theme.resolve_theme_key("ui.sidebar_border_fg").is_some());
+        theme.override_colors([("ui.sidebar_bg", Color::Rgb(1, 2, 3))]);
+        assert_eq!(theme.sidebar_bg, Color::Rgb(1, 2, 3));
     }
 
     #[test]

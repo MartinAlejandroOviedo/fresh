@@ -121,17 +121,13 @@ pub struct WidgetEvent {
     /// resolver was deleted with the panel class it served.
     pub row_target: bool,
     /// Capability, declared by the kind: a right-click raises the
-    /// plugin's context menu (fires a `context` widget_event) —
-    /// List/Tree row selects. The right-click seam keys off this
+    /// a context action — List/Tree row selects fire a plugin `context`
+    /// event, while editable Text fields raise the host's native clipboard
+    /// menu. The right-click seam keys off this
     /// instead of matching kind strings.
     ///
-    /// SCOPE: consumed today only by the DOCK slot's right-click arm
-    /// (`view::shell::widgets::hit_node` → `UiFact::WidgetContext`).
-    /// Split-mounted panels have no right-click seam (Base's tab menu
-    /// takes the gesture), and the centered modal swallows right
-    /// -clicks whole — wiring those is part of the recorded
-    /// mounted-panel arc, not an oversight at the producer sites,
-    /// which declare the capability wherever a row select exists.
+    /// Consumed by the retained shell's `WidgetContext` path for dock,
+    /// floating/sidebar, and pane-mounted plugin panels.
     pub context_click: bool,
 }
 

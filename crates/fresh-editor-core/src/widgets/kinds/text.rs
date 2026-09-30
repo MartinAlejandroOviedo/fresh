@@ -337,7 +337,7 @@ impl WidgetImpl for Text {
             sel_start,
             sel_end,
             label_width,
-            read_only: _,
+            read_only,
             markdown,
             key,
         } = spec
@@ -359,6 +359,7 @@ impl WidgetImpl for Text {
             (*sel_start, *sel_end),
             *label_width,
             *markdown,
+            *read_only,
             key.as_deref(),
             prev,
             next_state,
@@ -913,6 +914,7 @@ fn render_widget_text(
     spec_sel: (i32, i32),
     label_width: u32,
     markdown: bool,
+    read_only: bool,
     key: Option<&str>,
     prev: &HashMap<String, WidgetInstanceState>,
     next_state: &mut HashMap<String, WidgetInstanceState>,
@@ -1013,7 +1015,7 @@ fn render_widget_text(
                     byte_end: e.text.len(),
                     event: crate::widgets::WidgetEvent {
                         row_target: false,
-                        context_click: false,
+                        context_click: !read_only,
                         widget_key: k.to_string(),
                         widget_kind: "text",
                         payload: json!({}),
@@ -1047,6 +1049,7 @@ fn render_widget_text(
             spec_sel,
             label_width,
             is_focused,
+            read_only,
             key,
             ctx.marker_gutter,
             panel_width,
@@ -1307,6 +1310,7 @@ pub fn single_line(
     spec_sel: (i32, i32),
     label_width: u32,
     is_focused: bool,
+    read_only: bool,
     key: Option<&str>,
     marker_gutter: bool,
     panel_width: u32,
@@ -1414,7 +1418,7 @@ pub fn single_line(
         byte_end: entry.text.len(),
         event: crate::widgets::WidgetEvent {
             row_target: false,
-            context_click: false,
+            context_click: !read_only,
             widget_key: k.to_string(),
             widget_kind: "text",
             payload: json!({

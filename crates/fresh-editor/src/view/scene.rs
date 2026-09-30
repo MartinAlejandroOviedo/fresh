@@ -1544,7 +1544,7 @@ impl Editor {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ContextMenuView {
-    /// "tab" | "newTab" | "fileExplorer" — for styling / debugging.
+    /// Menu kind tag for styling / debugging.
     pub kind: &'static str,
     pub x: u16,
     pub y: u16,
@@ -1574,6 +1574,7 @@ impl Editor {
             ContextMenuKind::NewTab => "newTab",
             ContextMenuKind::Tab => "tab",
             ContextMenuKind::CloseSplit => "closeSplit",
+            ContextMenuKind::Text => "text",
         };
         Some(ContextMenuView {
             kind,

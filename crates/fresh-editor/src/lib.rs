@@ -11,6 +11,7 @@ pub mod i18n;
 pub use fresh_editor_core::config;
 #[cfg(feature = "runtime")]
 pub use fresh_editor_core::config_io;
+pub use fresh_editor_core::file_icons;
 pub use fresh_editor_core::config_keys;
 pub use fresh_editor_core::partial_config;
 pub use fresh_editor_core::types;

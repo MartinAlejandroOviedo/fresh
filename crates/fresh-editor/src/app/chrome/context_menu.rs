@@ -2,6 +2,7 @@
 //! close guard.
 
 use anyhow::Result as AnyhowResult;
+use fresh_i18n::t;
 
 use super::Editor;
 
@@ -62,6 +63,45 @@ impl Editor {
                 self.active_window_mut().close_context_menus();
                 if let Some((item, split_id)) = selected {
                     self.execute_close_split_menu_action(item, split_id);
+                }
+            }
+            ContextMenuKind::Text => {
+                let selected = self.active_window().text_context_menu.as_ref().map(|m| {
+                    (
+                        m.highlighted_item(),
+                        m.panel_key.clone(),
+                        m.widget_key.clone(),
+                    )
+                });
+                self.active_window_mut().close_context_menus();
+                let Some((item, panel_key, widget_key)) = selected else {
+                    return Ok(());
+                };
+                if !self.panel_focused_text_is(&panel_key, &widget_key) {
+                    return Ok(());
+                }
+                use crate::app::types::TextContextMenuItem;
+                match item {
+                    TextContextMenuItem::Cut => {
+                        if self.handle_widget_cut(&panel_key) {
+                            self.set_status_message(t!("clipboard.cut").to_string());
+                        }
+                    }
+                    TextContextMenuItem::Copy => {
+                        if self.handle_widget_copy(&panel_key) {
+                            self.set_status_message(t!("clipboard.copied").to_string());
+                        }
+                    }
+                    TextContextMenuItem::Paste => {
+                        if let Some(text) = self.clipboard.paste() {
+                            let normalized = text.replace("\r\n", "\n").replace('\r', "\n");
+                            self.handle_widget_insert_str(&panel_key, &normalized);
+                            self.set_status_message(t!("clipboard.pasted").to_string());
+                        }
+                    }
+                    TextContextMenuItem::SelectAll => {
+                        self.handle_widget_select_all(&panel_key);
+                    }
                 }
             }
         }

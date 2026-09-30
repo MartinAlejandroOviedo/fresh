@@ -2338,22 +2338,53 @@ impl Editor {
                 y,
             } => {
                 use crate::view::shell::widgets::Slot;
-                let panel = match slot {
-                    Slot::Dock => crate::app::PanelSlot::Dock,
-                    Slot::Floating => crate::app::PanelSlot::Floating,
-                    Slot::Sidebar(i) => crate::app::PanelSlot::Sidebar(i),
-                    // The settings dialog's rows raise no plugin menu.
-                    _ => return,
+                let runtime_slot = match slot {
+                    Slot::Dock => Some(crate::app::PanelSlot::Dock),
+                    Slot::Floating => Some(crate::app::PanelSlot::Floating),
+                    Slot::Sidebar(i) => Some(crate::app::PanelSlot::Sidebar(i)),
+                    Slot::Pane(_) => None,
+                    // Settings/prompt-toolbar aren't plugin context-menu
+                    // surfaces; leave their right press alone.
+                    Slot::Settings | Slot::SettingsEntry | Slot::PromptToolbar => return,
                 };
-                if panel == crate::app::PanelSlot::Dock
+                if runtime_slot == Some(crate::app::PanelSlot::Dock)
                     && self.dock.as_ref().is_some_and(|f| !f.focused)
                 {
                     self.refocus_floating_panel(crate::app::PanelSlot::Dock);
                 }
-                if let crate::app::PanelSlot::Sidebar(i) = panel {
+                if let Some(crate::app::PanelSlot::Sidebar(i)) = runtime_slot {
                     self.focus_sidebar_section(i);
                 }
-                self.fire_widget_context(panel, &hit, x, y);
+                if let Slot::Pane(pane) = slot {
+                    self.focus_pane(pane);
+                }
+
+                let panel_key = match (slot, runtime_slot) {
+                    (Slot::Pane(pane), _) => self.pane_panel_key(pane),
+                    (_, Some(panel)) => self.panel(panel).map(|p| p.panel_key.clone()),
+                    _ => None,
+                };
+                let Some(panel_key) = panel_key else {
+                    return;
+                };
+
+                if hit.widget_kind == "text" && self.panel_focused_text_is(&panel_key, hit.owner())
+                {
+                    self.active_window_mut().close_context_menus();
+                    self.active_window_mut().text_context_menu =
+                        Some(crate::app::types::TextContextMenu::new(
+                            panel_key,
+                            hit.owner().to_string(),
+                            x,
+                            y,
+                        ));
+                    return;
+                }
+
+                // List/Tree context actions remain plugin-owned.
+                if let Some(panel) = runtime_slot {
+                    self.fire_widget_context(panel, &hit, x, y);
+                }
             }
             UiFact::WidgetPopupHover { slot, index } => {
                 use crate::view::shell::widgets::Slot;

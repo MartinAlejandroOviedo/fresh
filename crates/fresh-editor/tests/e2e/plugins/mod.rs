@@ -3,6 +3,7 @@
 
 pub mod after_file_open_preview;
 pub mod agent_dev_loop;
+pub mod ai_chat_panel;
 pub mod asm_lsp_config;
 pub mod audit_mode;
 pub mod authority_snapshot;
