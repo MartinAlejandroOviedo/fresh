@@ -1,0 +1,19 @@
+NuIde 0.5.1 — instalador
+=====================================================
+
+NuIde es un fork de Fresh, el editor de terminal con soporte
+multi-cursor (https://github.com/sinelaw/fresh), escrito por
+Noam Lewis y la comunidad de Fresh.
+
+NuIde conserva la licencia original del codigo base:
+  GNU General Public License v2.0 (ver LICENSE-fresh.txt).
+
+El nombre "NuIde", su marca y sus configuraciones incluidas
+(tema mi-dracula, plugins file_icons / rgb_borders /
+opencode_terminal / ai_completion) son el trabajo de la
+persona que mantiene este fork; todo lo demas pertenece a
+los autores originales de Fresh, a quienes agradecemos el
+punto de partida.
+
+Upstream base: v0.5.1 (commit b15fd83e0) + trabajo local.
+Fork: https://github.com/MartinAlejandroOviedo/fresh
