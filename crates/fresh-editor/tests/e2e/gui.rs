@@ -127,7 +127,7 @@ fn test_gui_headless_launch_and_quit() {
         return;
     }
 
-    let binary = env!("CARGO_BIN_EXE_fresh");
+    let binary = env!("CARGO_BIN_EXE_nuide");
 
     let temp_dir = TempDir::new().unwrap();
     let file_path = temp_dir.path().join("test_gui.txt");

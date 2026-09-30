@@ -13,7 +13,7 @@ pub static HELP_MANUAL_CONTENT: LazyLock<String> =
     LazyLock::new(|| include_str!("../../docs/fresh.txt").replace('\r', ""));
 
 /// The name of the help manual buffer
-pub const HELP_MANUAL_BUFFER_NAME: &str = "*Fresh Manual*";
+pub const HELP_MANUAL_BUFFER_NAME: &str = "*NuIde Manual*";
 
 /// The name of the keyboard shortcuts buffer
 pub const KEYBOARD_SHORTCUTS_BUFFER_NAME: &str = "*Keyboard Shortcuts*";

@@ -47,7 +47,7 @@ const BEFORE_HELP_EN: &str =
 // the user's escape hatch back to a known language.
 /// fresh
 #[derive(Parser, Debug)]
-#[command(name = "fresh")]
+#[command(name = "nuide")]
 #[command(version, propagate_version = true)]
 #[command(before_help = BEFORE_HELP_EN)]
 struct Cli {
@@ -2132,7 +2132,7 @@ fn init_check_command() -> AnyhowResult<()> {
     std::process::exit(1);
 }
 
-/// Initialize a new Fresh package (plugin, theme, or language pack)
+/// Initialize a new NuIde package (plugin, theme, or language pack)
 fn init_package_command(package_type: Option<String>) -> AnyhowResult<()> {
     use std::io::{BufRead, Write};
 
@@ -2150,7 +2150,7 @@ fn init_package_command(package_type: Option<String>) -> AnyhowResult<()> {
         input.trim().to_string()
     };
 
-    println!("Fresh Package Initializer");
+    println!("NuIde Package Initializer");
     println!("=========================\n");
 
     // Determine package type
@@ -2167,7 +2167,7 @@ fn init_package_command(package_type: Option<String>) -> AnyhowResult<()> {
         }
         None => {
             println!("Package types:");
-            println!("  1. plugin   - Extend Fresh with custom commands and functionality");
+            println!("  1. plugin   - Extend NuIde with custom commands and functionality");
             println!("  2. theme    - Custom color schemes and styling");
             println!("  3. language - Syntax highlighting, LSP, and language configuration\n");
 
@@ -2272,7 +2272,7 @@ fn init_package_command(package_type: Option<String>) -> AnyhowResult<()> {
 /// Write a validation script that checks package.json against the official schema
 fn write_validate_script(dir: &Path) -> AnyhowResult<()> {
     let validate_sh = r#"#!/bin/bash
-# Validate package.json against the official Fresh package schema
+# Validate package.json against the official NuIde package schema
 #
 # Prerequisite: pip install jsonschema
 curl -sSL https://raw.githubusercontent.com/sinelaw/fresh/main/scripts/validate-package.sh | bash
@@ -2283,7 +2283,7 @@ curl -sSL https://raw.githubusercontent.com/sinelaw/fresh/main/scripts/validate-
 /// Write a validation script for themes (validates both package.json and theme.json)
 fn write_theme_validate_script(dir: &Path) -> AnyhowResult<()> {
     let validate_sh = r#"#!/bin/bash
-# Validate Fresh theme package
+# Validate NuIde theme package
 #
 # Prerequisite: pip install jsonschema
 set -e
@@ -2372,7 +2372,7 @@ fn create_plugin_package(
         description,
         author,
         "plugin",
-        "A Fresh plugin",
+        "A NuIde plugin",
         r#"{
     "entry": "plugin.ts"
   }"#,
@@ -2382,7 +2382,7 @@ fn create_plugin_package(
     write_validate_script(dir)?;
 
     // plugin.ts
-    let plugin_ts = r#"// Fresh Plugin
+    let plugin_ts = r#"// NuIde Plugin
 // Documentation: https://github.com/user/fresh/blob/main/docs/plugins.md
 
 const editor = getEditor();
@@ -2405,7 +2405,7 @@ function onBufferOpened(): void {
 registerHandler("on_buffer_opened", onBufferOpened);
 editor.on("buffer_opened", "on_buffer_opened");
 
-// Example: Add a keybinding in your Fresh config:
+// Example: Add a keybinding in your NuIde config:
 // {
 //   "keyBindings": {
 //     "ctrl+alt+h": "command:hello"
@@ -2422,7 +2422,7 @@ editor.on("buffer_opened", "on_buffer_opened");
 
 ## Installation
 
-Install via Fresh's package manager:
+Install via NuIde's package manager:
 ```
 :pkg install {}
 ```
@@ -2443,7 +2443,7 @@ MIT
 "#,
         name,
         if description.is_empty() {
-            "A Fresh plugin."
+            "A NuIde plugin."
         } else {
             description
         },
@@ -2467,7 +2467,7 @@ fn create_theme_package(
         description,
         author,
         "theme",
-        "A Fresh theme",
+        "A NuIde theme",
         r#"{
     "theme": "theme.json"
   }"#,
@@ -2513,7 +2513,7 @@ fn create_theme_package(
 
 ## Installation
 
-Install via Fresh's package manager:
+Install via NuIde's package manager:
 ```
 :pkg install {}
 ```
@@ -2525,7 +2525,7 @@ After installation, activate the theme:
 :theme {}
 ```
 
-Or add to your Fresh config:
+Or add to your NuIde config:
 ```json
 {{
   "theme": "{}"
@@ -2542,7 +2542,7 @@ MIT
 "#,
         name,
         if description.is_empty() {
-            "A Fresh theme."
+            "A NuIde theme."
         } else {
             description
         },
@@ -2570,7 +2570,7 @@ fn create_language_package(
         description,
         author,
         "language",
-        "Language support for Fresh",
+        "Language support for NuIde",
         r#"{
     "grammar": {
       "file": "grammars/syntax.sublime-syntax",
@@ -2649,7 +2649,7 @@ contexts:
 
 ## Installation
 
-Install via Fresh's package manager:
+Install via NuIde's package manager:
 ```
 :pkg install {}
 ```
@@ -2677,7 +2677,7 @@ Update `package.json` to match your language's requirements.
 
 1. Edit `grammars/syntax.sublime-syntax` for syntax highlighting
 2. Update `package.json` with correct file extensions and LSP command
-3. Test by copying to `~/.config/fresh/grammars/` and restarting Fresh
+3. Test by copying to `~/.config/fresh/grammars/` and restarting NuIde
 
 **Tip:** Search GitHub for existing `<language> sublime-syntax` files you can adapt.
 If using an existing grammar, check its license and include a copy in `grammars/LICENSE`.
@@ -2699,7 +2699,7 @@ MIT
 "#,
         name,
         if description.is_empty() {
-            "Language support for Fresh."
+            "Language support for NuIde."
         } else {
             description
         },
@@ -3371,7 +3371,7 @@ where
     }
 }
 
-/// When launched from inside Fresh's own embedded terminal, forward the
+/// When launched from inside NuIde's own embedded terminal, forward the
 /// file/dir arguments to the parent editor (identified by `FRESH_SESSION`)
 /// instead of starting a second editor in the terminal.
 ///
@@ -3527,10 +3527,10 @@ fn extract_session_flag<'a>(tokens: &[&'a str]) -> (Option<String>, Vec<&'a str>
 ///
 /// Worded so the reader can act: an agent that can re-run outside its sandbox
 /// needs to be told that is the fix, and told it in terms it can match on. The
-/// injected "Teach Fresh CLI" contract points at this phrasing.
+/// injected "Teach NuIde CLI" contract points at this phrasing.
 fn socket_denied_error(session: &str, socket_paths: &SocketPaths) -> anyhow::Error {
     anyhow::anyhow!(
-        "cannot reach the Fresh editor for session '{}': its control socket ({}) \
+        "cannot reach the NuIde editor for session '{}': its control socket ({}) \
          could not be reached because connecting to it was denied. The editor is \
          most likely running — the socket simply lives outside this process's \
          sandbox. Re-run this command outside the sandbox.",
@@ -3545,8 +3545,8 @@ fn resolve_cmd_socket(session_override: Option<&str>) -> AnyhowResult<SocketPath
         _ => match std::env::var("FRESH_SESSION") {
             Ok(s) if !s.trim().is_empty() => s,
             _ => anyhow::bail!(
-                "not inside a Fresh session; set --session <id> (or run inside a \
-                 Fresh workspace so $FRESH_SESSION is set)"
+                "not inside a NuIde session; set --session <id> (or run inside a \
+                 NuIde workspace so $FRESH_SESSION is set)"
             ),
         },
     };
@@ -3561,7 +3561,7 @@ fn resolve_cmd_socket(session_override: Option<&str>) -> AnyhowResult<SocketPath
         // stale session that is in fact alive and well.
         ServerLiveness::Unreachable => Err(socket_denied_error(&session, &socket_paths)),
         ServerLiveness::Dead => {
-            anyhow::bail!("no running Fresh editor for session '{}'", session)
+            anyhow::bail!("no running NuIde editor for session '{}'", session)
         }
     }
 }
@@ -3603,7 +3603,7 @@ fn cmd_build_timeout() -> std::time::Duration {
 fn cmd_read_error(e: std::io::Error) -> anyhow::Error {
     if e.kind() == std::io::ErrorKind::TimedOut {
         anyhow::anyhow!(
-            "the Fresh editor accepted the connection but did not answer within {:?}. \
+            "the NuIde editor accepted the connection but did not answer within {:?}. \
              It may be busy, or running a build without command-channel support; \
              raise the wait with FRESH_CMD_TIMEOUT_MS if it is merely slow.",
             cmd_reply_timeout()
@@ -3669,7 +3669,7 @@ fn connect_cmd(socket_paths: &SocketPaths) -> AnyhowResult<CmdConnection> {
     })?;
     if !accepted {
         // client_handshake already printed the mismatch reason.
-        anyhow::bail!("handshake with the Fresh editor failed");
+        anyhow::bail!("handshake with the NuIde editor failed");
     }
     Ok(CmdConnection { conn, reader })
 }
@@ -3821,7 +3821,7 @@ fn tour_help_text() -> AnyhowResult<String> {
         "\
 Guided code tours
 
-Fresh plays guided walkthroughs of a codebase from a JSON manifest,
+NuIde plays guided walkthroughs of a codebase from a JSON manifest,
 shown in the Utility Dock with a step rail and highlighted code.
 Two formats load, auto-detected by content:
 
@@ -3924,7 +3924,7 @@ fn script_help_text() -> String {
         "\
 Scripting the editor (TypeScript)
 
-Drive a running Fresh with the same API plugins use. A script runs as
+Drive a running NuIde with the same API plugins use. A script runs as
 the body of an async function with an `editor` global; whatever it
 returns is printed as JSON. Source comes from a file or stdin.
 
@@ -3944,7 +3944,7 @@ edit init.ts, `init reload`, then `command run` the command you registered.
 No keystroke from the user is needed at any point.
 
 Target a specific daemon with --session NAME (default: the daemon of the
-current working directory). Inside a Fresh terminal the right session is
+current working directory). Inside a NuIde terminal the right session is
 already in `$FRESH_SESSION`, so no flag is needed — reach for --session only
 when running from outside, where `fresh --cmd daemon list` names the
 candidates.
@@ -3990,7 +3990,7 @@ fn help_plugin() -> AnyhowResult<()> {
 
 /// The `help plugin` body.
 ///
-/// Aimed squarely at someone — usually an agent, working in one of Fresh's own
+/// Aimed squarely at someone — usually an agent, working in one of NuIde's own
 /// embedded terminals — who has been asked to customize the editor and wants
 /// to get it right on the first attempt. The two things that stop that are
 /// (a) not knowing the runtime's shape, and (b) not knowing the one shape a
@@ -5495,7 +5495,7 @@ fn real_main() -> AnyhowResult<()> {
     args.files = apply_plus_line_args(std::mem::take(&mut args.files))?;
     let args = args;
 
-    // Expose `FRESH_INTERACTIVE=1` on the editor's process env when Fresh
+    // Expose `FRESH_INTERACTIVE=1` on the editor's process env when NuIde
     // is launched as a human-interactive editor (stdin is a TTY, not a
     // CLI sub-command, not --stdin / --attach / --server). init.ts (and
     // plugins in general) read this via getEnv to branch on "real"
@@ -5513,7 +5513,7 @@ fn real_main() -> AnyhowResult<()> {
         return result;
     }
 
-    // If launched from inside Fresh's own embedded terminal (FRESH_SESSION
+    // If launched from inside NuIde's own embedded terminal (FRESH_SESSION
     // is set), forward file/dir opens to that parent editor instead of
     // starting a second editor in the terminal. Returns Some(..) when the
     // request was forwarded (we're done); None to fall through and launch
@@ -6593,7 +6593,7 @@ mod tests {
     #[test]
     fn test_help_tour_schema_is_valid_json() {
         let schema: serde_json::Value = serde_json::from_str(TOUR_SCHEMA_JSON).unwrap();
-        assert_eq!(schema["title"], "Fresh Code Tour Manifest");
+        assert_eq!(schema["title"], "NuIde Code Tour Manifest");
         assert!(schema["definitions"]["TourStep"].is_object());
     }
 

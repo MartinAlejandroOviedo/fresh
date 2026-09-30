@@ -25,7 +25,7 @@ const editor = getEditor();
 //
 //   The startup surface: a scrollable buffer that onboards three
 //   audiences on one page without overwhelming the simplest. It has one
-//   automatic behaviour, and one setting to govern it: when Fresh
+//   automatic behaviour, and one setting to govern it: when NuIde
 //   launches, open as a tab behind whatever is already there. It never
 //   takes the foreground on its own, never closes another buffer, and
 //   never reopens because something else went away — closing it is the
@@ -647,12 +647,12 @@ function banner(level: string, sub: string): WidgetSpec {
 // ── The wordmark ─────────────────────────────────────────────────────
 
 const ART = [
-  "███████╗██████╗ ███████╗███████╗██╗  ██╗",
-  "██╔════╝██╔══██╗██╔════╝██╔════╝██║  ██║",
-  "█████╗  ██████╔╝█████╗  ███████╗███████║",
-  "██╔══╝  ██╔══██╗██╔══╝  ╚════██║██╔══██║",
-  "██║     ██║  ██║███████╗███████║██║  ██║",
-  "╚═╝     ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝",
+  "███╗   ██╗██╗   ██╗███████╗██╗██████╗ ███████╗",
+  "████╔  ██║██║   ██║██╔════╝██║██╔══██╗██╔════╝",
+  "██╔██╗ ██║██║   ██║███████╗██║██║  ██║█████╔  ",
+  "██║╚██╗██║╚██╗ ██╔╚════██║██║██║  ██║██╔══╝  ",
+  "██║ ╚████║ ╚████╔╝ ███████║██║██████╔╝███████╗",
+  "╚═╝  ╚═══╝  ╚═══╝  ╚══════╝╚═╝╚════╝ ╚══════╝",
 ];
 
 /** ANSI-Shadow is a two-material face: `█` block faces and a `╔╗╚╝║═`
@@ -695,7 +695,7 @@ function hero(): WidgetSpec[] {
   const wide = viewportWidth() >= 60;
   const art = wide
     ? ART.map((l) => artLine(l))
-    : [centred([{ text: "fresh", style: { fg: C.art, bold: true } }])];
+    : [centred([{ text: "nuide", style: { fg: C.art, bold: true } }])];
   const tag = viewportWidth() >= 70
     ? "A terminal text editor and IDE. It opens instantly and grows into an IDE."
     : "A terminal text editor and IDE.";
@@ -1065,7 +1065,7 @@ function finderCard(): WidgetSpec {
 
 function level1(): WidgetSpec[] {
   return [
-    banner("1", "Open a file. Type. Save. Fresh stays out of the way."),
+    banner("1", "Open a file. Type. Save. NuIde stays out of the way."),
     finderCard(),
     blank(),
     card("find", "Find things", "files, text, and where you were", () => [
@@ -1111,13 +1111,13 @@ function level1(): WidgetSpec[] {
       blank(),
     ]),
     blank(),
-    card("editorvar", "Use Fresh from the shell", "$EDITOR and file:line", () => [
+    card("editorvar", "Use NuIde from the shell", "$EDITOR and file:line", () => [
       blank(),
       plain("  # Commit messages and rebases", C.muted),
-      plain("  git config --global core.editor \"fresh --wait\"", C.value),
+      plain("  git config --global core.editor \"nuide --wait\"", C.value),
       blank(),
       plain("  # Open at a line and column", C.muted),
-      plain("  fresh src/main.rs:42:10", C.value),
+      plain("  nuide src/main.rs:42:10", C.value),
       blank(),
       bullet("Unsaved buffers, tabs and splits survive a quit or a crash."),
       blank(),
@@ -1561,7 +1561,7 @@ function level3(): WidgetSpec[] {
     card("tours", "Code tours", "a walkthrough, in a panel", () => [
       blank(),
       bullet("A tour plays in a panel: the steps on the left, the current step's text on the right, and the file it points at open above, scrolled to the lines it is about."),
-      bullet("A tour is a small JSON file, so ask an agent for one — \"walk me through what this branch changed\" — and it can write the tour and open it. Tell it to read fresh --cmd help tour for the format."),
+      bullet("A tour is a small JSON file, so ask an agent for one — \"walk me through what this branch changed\" — and it can write the tour and open it. Tell it to read nuide --cmd help tour for the format."),
       bullet("Useful for reviewing a pull request, for code you have not read before, and for explaining your own work later."),
       blank(),
       row(
@@ -1575,11 +1575,11 @@ function level3(): WidgetSpec[] {
       blank(),
       plain("  # What is the editor showing?", C.muted),
       plain("  echo 'return editor.describeWorkspace()' \\", C.value),
-      plain("    | fresh --cmd script run", C.value),
+      plain("    | nuide --cmd script run", C.value),
       blank(),
       plain("  # Open a file beside what you are reading", C.muted),
       plain("  echo 'return editor.splitWindow({ file: \"src/main.rs\" })' \\", C.value),
-      plain("    | fresh --cmd script run", C.value),
+      plain("    | nuide --cmd script run", C.value),
       blank(),
       bullet("A few lines of TypeScript can do anything a plugin can: open files, arrange panes, make a workspace, start an agent, open a tour."),
       bullet("The script prints its answer as JSON and exits. Whatever it opened stays open."),
@@ -1590,13 +1590,13 @@ function level3(): WidgetSpec[] {
     card("remote", "Remote files and containers", "SSH, devcontainers, daemons", () => [
       blank(),
       plain("  # Edit on another machine; a save sends the patch, not the file", C.muted),
-      plain("  fresh deploy@prod:/etc/nginx/nginx.conf", C.value),
+      plain("  nuide deploy@prod:/etc/nginx/nginx.conf", C.value),
       blank(),
       plain("  # Keep the editor running after the terminal closes", C.muted),
-      plain("  fresh -a myproject", C.value),
+      plain("  nuide -a myproject", C.value),
       blank(),
       plain("  # Open a file in an editor that is already running", C.muted),
-      plain("  fresh --cmd daemon open-file myproject src/main.rs:42", C.value),
+      plain("  nuide --cmd daemon open-file myproject src/main.rs:42", C.value),
       blank(),
       bullet("Detach, in the palette, gives the terminal back and leaves the editor running."),
       bullet("A dropped connection reconnects on its own. The file finder, grep and even a sudo save work over it."),
@@ -1620,7 +1620,7 @@ function footer(): WidgetSpec[] {
     plain("  the rest is here when you want it.", C.value),
     blank(),
     ...paletteLine(),
-    plain("  fresh --help lists the command line. Docs and blog: getfresh.dev", C.muted),
+    plain("  nuide --help lists the command line. Docs and blog: getfresh.dev", C.muted),
     blank(),
   ];
 }
@@ -2103,7 +2103,7 @@ function probeWorkspaces(): void {
 
 editor.defineConfigBoolean("showOnStartup", {
   default: true,
-  description: "Open the welcome screen when Fresh starts, as a tab behind whatever is already open.",
+  description: "Open the welcome screen when NuIde starts, as a tab behind whatever is already open.",
 });
 
 /** The footer toggle writes plugin global state, which persists across

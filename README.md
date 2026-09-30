@@ -1,3 +1,15 @@
+# NuIde
+
+> **NuIde** es el editor de esta repo: un fork de [Fresh](https://github.com/sinelaw/fresh)
+> (sinelaw/fresh) sobre el que estamos construyendo nuestro IDE. Fresh fue el punto de
+> partida; NuIde es el nombre, la marca y el rumbo. El código base conserva su licencia
+> original (GPL-2.0) y la atribución a Fresh y sus autores. Lo nuestro es la dirección:
+> branding, features y el camino del editor.
+
+*Upstream: Fresh by sinelaw — https://github.com/sinelaw/fresh · https://getfresh.dev*
+
+---
+
 # Fresh
 
 A modern, full-featured terminal text editor, **with zero configuration**. Familiar keybindings, mouse support, and IDE-level features — no learning curve required.

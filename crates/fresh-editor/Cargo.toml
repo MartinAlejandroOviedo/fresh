@@ -3,7 +3,7 @@ name = "fresh-editor"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
-default-run = "fresh"
+default-run = "nuide"
 autotests = false
 description = "A lightweight, fast terminal-based text editor with LSP support and TypeScript plugins"
 license.workspace = true
@@ -16,7 +16,7 @@ categories = ["command-line-utilities", "text-editors"]
 exclude = ["web-ui/test/**"]
 
 [[bin]]
-name = "fresh"
+name = "nuide"
 path = "src/main.rs"
 required-features = ["runtime"]
 

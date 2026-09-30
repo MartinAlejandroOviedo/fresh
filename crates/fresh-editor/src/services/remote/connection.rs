@@ -479,7 +479,7 @@ async fn ssh_eof_error(
                 // on python3, so name the requirement and the fix plainly.
                 Some(127) => format!(
                     "Python 3 was not found on the remote host {}. \
-                     Fresh's remote support requires python3 on the remote — \
+                     NuIde's remote support requires python3 on the remote — \
                      install it there, then reconnect",
                     params
                 ),
