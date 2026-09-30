@@ -655,6 +655,74 @@ const ART = [
   "╚═╝  ╚═══╝  ╚═══╝  ╚══════╝╚═╝╚════╝ ╚══════╝",
 ];
 
+/** Dragon del fork: perfil con cuernos, ojo, boca con dientes y fuego. Las
+ *  caras `█` usan el material del wordmark y las llamas `~` caen en el bevel
+ *  — dos tonos gratis, legible en consolas de celula. */
+const DRAGON = [
+  "  ██     ██               ",
+  " ████   ████              ",
+  " █████ ██████████         ",
+  "  ██████████████████████  ",
+  " █████  ████████████████  ",
+  "█████   ████████████████  ",
+  "████████████████████~~~~~ ",
+  "███████████████       ~~  ",
+  "█████████████████████████ ",
+  " ███████████████████████  ",
+  "  ████████████████████    ",
+  "   ████████████████       ",
+  "    █████████████         ",
+  "     ████████             ",
+];
+
+/** Fila del dragon: bloques con la cara (C.art), llamas con C.warn, demas
+ *  espacios con el marco tenue. Centrada igual que el wordmark. */
+function dragonLine(l: string): WidgetSpec {
+  const segs: StyledSegment[] = [];
+  const kind = (ch: string) => (ch === "█" ? 1 : ch === "~" ? 2 : 0);
+  let i = 0;
+  while (i < l.length) {
+    const ch = l[i];
+    const k = kind(ch);
+    let j = i;
+    while (j < l.length && kind(l[j]) === k) j++;
+    segs.push({
+      text: l.slice(i, j),
+      style:
+        k === 1
+          ? { fg: C.art, bold: true }
+          : k === 2
+            ? { fg: "diagnostic.warning_fg", bold: true }
+            : { fg: C.frame },
+    });
+    i = j;
+  }
+  return centred(segs);
+}
+
+/** Seccion de documentacion del fork: teclas, CLI y donde vive la config. */
+function docsSection(): WidgetSpec[] {
+  const rows: WidgetSpec[] = [...air(2), rule("DOCUMENTATION"), blank()];
+  const key = (label: string) =>
+    rows.push(centred([{ text: label, style: { fg: C.mark, bold: true } }]));
+  const item = (t: string, fg?: string) => rows.push(plain("   " + t, fg));
+  key("Teclas");
+  item("Ctrl+P — paleta de comandos (incl. “Alternar bordes RGB”)");
+  item("Ctrl+E — explorador de archivos · Alt+P — paleta del editor");
+  item("View → Opencode — panel del agente de IA a la derecha");
+  rows.push(blank());
+  key("CLI");
+  item("nuide . — abrir el proyecto de la carpeta actual");
+  item("nuide --skill — guía para conducir el editor desde la terminal");
+  item("nuide --cmd command list — comandos registrados, los del fork incluidos");
+  rows.push(blank());
+  key("Configuración NuIde");
+  item("%APPDATA%\\fresh\\themes\\mi-dracula.json — tema con alpha [r,g,b,a]", C.muted);
+  item("%APPDATA%\\fresh\\plugins\\ — file_icons · rgb_borders · opencode_terminal · ai_completion", C.muted);
+  item("NuIde es un fork de Fresh (sinelaw/fresh, GPL-2.0) — ver attributions.txt", C.muted);
+  return rows;
+}
+
 /** ANSI-Shadow is a two-material face: `█` block faces and a `╔╗╚╝║═`
  *  bevel. Painting both in one colour flattened the mark into a slab;
  *  recessing the bevel gives it the depth the glyph set was drawn for.
@@ -697,7 +765,7 @@ function hero(): WidgetSpec[] {
     ? ART.map((l) => artLine(l))
     : [centred([{ text: "nuide", style: { fg: C.art, bold: true } }])];
   const tag = viewportWidth() >= 70
-    ? "A terminal text editor and IDE. It opens instantly and grows into an IDE."
+    ? "A terminal text editor and IDE. Fork of Fresh: opens instantly, grows into an IDE."
     : "A terminal text editor and IDE.";
   return [
     // The off switch rides the top edge, right-aligned, clear of the
@@ -707,7 +775,12 @@ function hero(): WidgetSpec[] {
     ...startupRow(),
     blank(),
     ...art,
-    ...air(2),
+    ...air(1),
+    // El dragon del fork, solo en pantallas anchas: es adorno, no
+    // informacion — estrecha, la pagina debe poder leerse entera sin el arte.
+    ...(wide ? DRAGON.map((l) => dragonLine(l)) : []),
+    ...air(1),
+    centred([{ text: "NuIde 0.0.1 alpha", style: { fg: C.value, bold: true } }]),
     centred([{ text: tag, style: { fg: C.muted, italic: true } }]),
     blank(),
     chipsRow(),
@@ -1829,6 +1902,7 @@ function buildSpec(): WidgetSpec {
   return col(
     ...hero(),
     ...doors(),
+    ...docsSection(),
     ...air(2),
     ...uiFeatures(),
     ...air(2),
